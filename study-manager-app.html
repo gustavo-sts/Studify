@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Estudos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            padding: 16px;
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.8rem;
+        }
+        
+        .container {
+            width: 100%;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .task-list {
+            margin-top: 20px;
+        }
+        
+        .task-item {
+            padding: 12px;
+            border-radius: 5px;
+            background-color: white;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .task-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+        
+        .task-subject {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+        
+        .task-date {
+            font-size: 0.85rem;
+            color: #95a5a6;
+        }
+        
+        .task-description {
+            margin-top: 10px;
+            color: #34495e;
+        }
+        
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .btn-edit {
+            background-color: #f39c12;
+        }
+        
+        .btn-delete {
+            background-color: #e74c3c;
+        }
+        
+        .btn-complete {
+            background-color: #2ecc71;
+        }
+        
+        .completed {
+            background-color: #ecf0f1;
+        }
+        
+        .completed .task-title {
+            text-decoration: line-through;
+            color: #7f8c8d;
+        }
+        
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            background-color: #ddd;
+            cursor: pointer;
+        }
+        
+        .tab.active {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .progress-container {
+            margin-bottom: 20px;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #3498db;
+            transition: width 0.3s ease;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+        
+        .no-tasks {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                width: 100%;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .task-actions {
+                flex-direction: column;
+            }
+            
+            button {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gerenciador de Estudos</h1>
+        
+        <div class="card progress-container">
+            <label>Progresso</label>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="stats">
+                <span id="completed-count">0 concluídas</span>
+                <span id="total-count">0 tarefas</span>
+            </div>
+        </div>
+        
+        <div class="tab-container">
+            <div class="tab active" id="tab-tasks">Tarefas</div>
+            <div class="tab" id="tab-new">Nova Tarefa</div>
+        </div>
+        
+        <div id="new-task-form" class="card" style="display: none;">
+            <form id="task-form">
+                <div>
+                    <label for="title">Título:</label>
+                    <input type="text" id="title" required>
+                </div>
+                
+                <div>
+                    <label for="subject">Matéria:</label>
+                    <input type="text" id="subject" required>
+                </div>
+                
+                <div>
+                    <label for="dueDate">Data de Entrega:</label>
+                    <input type="date" id="dueDate" required>
+                </div>
+                
+                <div>
+                    <label for="description">Descrição:</label>
+                    <textarea id="description"></textarea>
+                </div>
+                
+                <div>
+                    <label for="priority">Prioridade:</label>
+                    <select id="priority">
+                        <option value="baixa">Baixa</option>
+                        <option value="media" selected>Média</option>
+                        <option value="alta">Alta</option>
+                    </select>
+                </div>
+                
+                <button type="submit" id="save-task">Salvar Tarefa</button>
+                <input type="hidden" id="task-id">
+            </form>
+        </div>
+        
+        <div id="tasks-container">
+            <div class="task-list" id="task-list">
+                <!-- Tasks will be added here dynamically -->
+                <div class="no-tasks" id="no-tasks">
+                    Nenhuma tarefa adicionada ainda.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const taskForm = document.getElementById('task-form');
+        const taskList = document.getElementById('task-list');
+        const noTasks = document.getElementById('no-tasks');
+        const tabTasks = document.getElementById('tab-tasks');
+        const tabNew = document.getElementById('tab-new');
+        const newTaskForm = document.getElementById('new-task-form');
+        const tasksContainer = document.getElementById('tasks-container');
+        const progressFill = document.getElementById('progress-fill');
+        const completedCount = document.getElementById('completed-count');
+        const totalCount = document.getElementById('total-count');
+        
+        // State
+        let tasks = [];
+        let currentTab = 'tasks';
+        
+        // Load tasks from cookies on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTasks();
+            renderTasks();
+            updateProgress();
+        });
+        
+        // Tab switching
+        tabTasks.addEventListener('click', () => {
+            setActiveTab('tasks');
+        });
+        
+        tabNew.addEventListener('click', () => {
+            setActiveTab('new');
+            // Reset form when opening
+            taskForm.reset();
+            document.getElementById('task-id').value = '';
+        });
+        
+        // Form submission
+        taskForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('title').value;
+            const subject = document.getElementById('subject').value;
+            const dueDate = document.getElementById('dueDate').value;
+            const description = document.getElementById('description').value;
+            const priority = document.getElementById('priority').value;
+            const taskId = document.getElementById('task-id').value;
+            
+            if (taskId) {
+                // Edit existing task
+                const taskIndex = tasks.findIndex(task => task.id === taskId);
+                if (taskIndex !== -1) {
+                    tasks[taskIndex] = {
+                        ...tasks[taskIndex],
+                        title,
+                        subject,
+                        dueDate,
+                        description,
+                        priority,
+                        updatedAt: new Date().toISOString()
+                    };
+                }
+            } else {
+                // Add new task
+                const newTask = {
+                    id: generateId(),
+                    title,
+                    subject,
+                    dueDate,
+                    description,
+                    priority,
+                    completed: false,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                tasks.push(newTask);
+            }
+            
+            // Save to cookies, render tasks, and switch to tasks tab
+            saveTasks();
+            renderTasks();
+            setActiveTab('tasks');
+            updateProgress();
+        });
+        
+        // Utility Functions
+        function setActiveTab(tab) {
+            currentTab = tab;
+            
+            if (tab === 'tasks') {
+                tabTasks.classList.add('active');
+                tabNew.classList.remove('active');
+                tasksContainer.style.display = 'block';
+                newTaskForm.style.display = 'none';
+            } else {
+                tabTasks.classList.remove('active');
+                tabNew.classList.add('active');
+                tasksContainer.style.display = 'none';
+                newTaskForm.style.display = 'block';
+            }
+        }
+        
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substring(2);
+        }
+        
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: '2-digit', day: '2-digit' };
+            return new Date(dateString).toLocaleDateString('pt-BR', options);
+        }
+        
+        // Tasks CRUD Operations
+        function saveTasks() {
+            const tasksJSON = JSON.stringify(tasks);
+            document.cookie = `studyTasks=${encodeURIComponent(tasksJSON)};path=/;max-age=31536000`;
+        }
+        
+        function loadTasks() {
+            const cookies = document.cookie.split(';');
+            for (const cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'studyTasks') {
+                    try {
+                        tasks = JSON.parse(decodeURIComponent(value)) || [];
+                    } catch (e) {
+                        console.error('Error parsing tasks from cookie:', e);
+                        tasks = [];
+                    }
+                    break;
+                }
+            }
+        }
+        
+        function deleteTask(id) {
+            tasks = tasks.filter(task => task.id !== id);
+            saveTasks();
+            renderTasks();
+            updateProgress();
+        }
+        
+        function editTask(id) {
+            const task = tasks.find(task => task.id === id);
+            if (!task) return;
+            
+            document.getElementById('title').value = task.title;
+            document.getElementById('subject').value = task.subject;
+            document.getElementById('dueDate').value = task.dueDate;
+            document.getElementById('description').value = task.description;
+            document.getElementById('priority').value = task.priority;
+            document.getElementById('task-id').value = task.id;
+            
+            setActiveTab('new');
+        }
+        
+        function toggleComplete(id) {
+            const taskIndex = tasks.findIndex(task => task.id === id);
+            if (taskIndex !== -1) {
+                tasks[taskIndex].completed = !tasks[taskIndex].completed;
+                saveTasks();
+                renderTasks();
+                updateProgress();
+            }
+        }
+        
+        function renderTasks() {
+            // Sort tasks by due date
+            const sortedTasks = [...tasks].sort((a, b) => {
+                return new Date(a.dueDate) - new Date(b.dueDate);
+            });
+            
+            // Clear the task list
+            taskList.innerHTML = '';
+            
+            if (sortedTasks.length === 0) {
+                taskList.appendChild(noTasks);
+                return;
+            }
+            
+            noTasks.remove();
+            
+            // Render each task
+            sortedTasks.forEach(task => {
+                const taskItem = document.createElement('div');
+                taskItem.classList.add('task-item');
+                
+                if (task.completed) {
+                    taskItem.classList.add('completed');
+                }
+                
+                taskItem.innerHTML = `
+                    <div class="task-header">
+                        <div class="task-title">${task.title}</div>
+                        <div class="task-date">Entregar até: ${formatDate(task.dueDate)}</div>
+                    </div>
+                    <div class="task-subject">${task.subject} - Prioridade: ${task.priority}</div>
+                    ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
+                    <div class="task-actions">
+                        <button class="btn-complete" data-id="${task.id}">
+                            ${task.completed ? 'Desmarcar' : 'Concluir'}
+                        </button>
+                        <button class="btn-edit" data-id="${task.id}">Editar</button>
+                        <button class="btn-delete" data-id="${task.id}">Excluir</button>
+                    </div>
+                `;
+                
+                taskList.appendChild(taskItem);
+            });
+            
+            // Add event listeners to buttons
+            document.querySelectorAll('.btn-delete').forEach(button => {
+                button.addEventListener('click', () => deleteTask(button.dataset.id));
+            });
+            
+            document.querySelectorAll('.btn-edit').forEach(button => {
+                button.addEventListener('click', () => editTask(button.dataset.id));
+            });
+            
+            document.querySelectorAll('.btn-complete').forEach(button => {
+                button.addEventListener('click', () => toggleComplete(button.dataset.id));
+            });
+        }
+        
+        function updateProgress() {
+            const total = tasks.length;
+            const completed = tasks.filter(task => task.completed).length;
+            
+            const percentage = total > 0 ? (completed / total) * 100 : 0;
+            progressFill.style.width = `${percentage}%`;
+            
+            completedCount.textContent = `${completed} concluídas`;
+            totalCount.textContent = `${total} tarefas`;
+        }
+    </script>
+</body>
+</html>
